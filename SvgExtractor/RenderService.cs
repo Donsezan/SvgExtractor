@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 
@@ -7,7 +8,7 @@ namespace SvgExtractor
 {
     public class RenderService
     {
-        public List<string> duet(string link)
+        public async Task<List<string>> duet(string link)
         {
             var chromeOptions = new ChromeOptions();
             chromeOptions.AddArguments(new List<string>()
@@ -20,16 +21,15 @@ namespace SvgExtractor
 
             var chromeDriverService = ChromeDriverService.CreateDefaultService();
             chromeDriverService.HideCommandPromptWindow = true; // This is to hidden the console. 
-            ChromeDriver driver = new ChromeDriver(chromeDriverService, chromeOptions);
+            var driver = new ChromeDriver(chromeDriverService, chromeOptions);
             driver.Navigate().GoToUrl(link);
-            System.Threading.Thread.Sleep(100);
-            var list = WaitForLoad(driver);
+            var list = await WaitForLoad(driver);
             driver.Close();
             driver.Dispose();
             return list;
         }
 
-        private List<string> WaitForLoad(IWebDriver driver, int timeoutSec = 100)
+        private async Task<List<string>> WaitForLoad(IWebDriver driver, int timeoutSec = 10)
         {
             var sourceState = new List<string>();
             var source = driver.PageSource;
@@ -37,13 +37,23 @@ namespace SvgExtractor
             sourceState.Add(source);
             bool loading = true;
             var i = 0;
+            if (!Directory.Exists("Temp"))
+            {
+                Directory.CreateDirectory("Temp");
+            }
+
             do
             {
-                System.Threading.Thread.Sleep(timeoutSec);
+                await Task.Delay(timeoutSec);
                 source = driver.PageSource;
                 source = source.Remove(source.IndexOf(@"</svg>") + 6).Substring(source.IndexOf("<svg"));
                 sourceState.Add(source);
-                File.WriteAllText($"svg-{i}.svg", source);
+                Task.Factory.StartNew(async () =>
+                {
+                    var src = source;
+                    var svgNumber = i;
+                    File.WriteAllText($"Temp\\svg-{svgNumber}.svg", src);
+                });
                 if (sourceState[sourceState.Count - 2] == source)
                 {
                     loading = false;

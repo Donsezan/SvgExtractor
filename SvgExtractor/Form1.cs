@@ -1,26 +1,46 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
+using System.Collections.Specialized;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using Svg;
-using Svg.Transforms;
+using Microsoft.Win32;
 
 namespace SvgExtractor
 {
     public partial class Form1 : Form
     {
+        private string PathToSvg;
+        private bool PageLoaded;
 
         public Form1()
         {
+            IeFeatureControlFix();
             InitializeComponent();
+        }
+
+        private void IeFeatureControlFix()
+        {
+            int BrowserVer, RegVal;
+
+            // get the installed IE version
+            using (WebBrowser Wb = new WebBrowser())
+                BrowserVer = Wb.Version.Major;
+
+            // set the appropriate IE version
+            if (BrowserVer >= 11)
+                RegVal = 11001;
+            else if (BrowserVer == 10)
+                RegVal = 10001;
+            else if (BrowserVer == 9)
+                RegVal = 9999;
+            else if (BrowserVer == 8)
+                RegVal = 8888;
+            else
+                RegVal = 7000;
+
+            // set the actual key
+            using (RegistryKey Key = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION", RegistryKeyPermissionCheck.ReadWriteSubTree))
+                if (Key.GetValue(System.Diagnostics.Process.GetCurrentProcess().ProcessName + ".exe") == null)
+                    Key.SetValue(System.Diagnostics.Process.GetCurrentProcess().ProcessName + ".exe", RegVal, RegistryValueKind.DWord);
         }
 
         private void OpenButton_Click(object sender, EventArgs e)
@@ -43,35 +63,52 @@ namespace SvgExtractor
             }
         }
 
-        private void DoItButton_Click(object sender, EventArgs e)
+        private async void DoItButton_Click(object sender, EventArgs e)
         {
+
+            webBrowser1.Navigate(PathTextBox.Text);
             var renderService = new RenderService();
-            var elementlist = renderService.duet(PathTextBox.Text);
-            SvgTrackBar.Maximum = elementlist.Count;
-            SvgTrackBar.Value = elementlist.Count;
+            var elementlist = await renderService.duet(PathTextBox.Text);
+            SvgTrackBar.Minimum = 1;
+            SvgTrackBar.Maximum = elementlist.Count - 1;
+            SvgTrackBar.Value = elementlist.Count - 1;
+            PathToSvg = AppDomain.CurrentDomain.BaseDirectory + $"Temp\\svg-{SvgTrackBar.Value}.svg";
         }
-
-
-        public static Image resizeImage(Image imgToResize, Size size)
-        {
-            return (Image)(new Bitmap(imgToResize, size));
-        }
-
+        
         private void ScrollChainged_event(object sender, EventArgs e)
         {
-            DrawSvg($"svg-{SvgTrackBar.Value}.svg");
+            PathToSvg = AppDomain.CurrentDomain.BaseDirectory + $"Temp\\svg-{SvgTrackBar.Value}.svg";
+            webBrowser1.Navigate(PathToSvg);
         }
 
-        private void DrawSvg(string path)
+        private void SaveButton_Click(object sender, EventArgs e)
         {
-            var svgDoc = SvgDocument.Open(path);
-            svgDoc.Transforms = new SvgTransformCollection { new SvgScale(2, 2) };
-            svgDoc.Width = new SvgUnit(svgDoc.Width.Type, svgDoc.Width * 2);
-            svgDoc.Height = new SvgUnit(svgDoc.Height.Type, svgDoc.Height * 2);
-            var svg = svgDoc.Draw();
-            pictureBox.Image = new Bitmap(svg, new Size(50, 50));
+            if (SaveTextBox.Text == string.Empty)
+            {
+                SaveTextBox.Text = PathToSvg;
+            }
+            else
+            {
+                try
+                {
+                    File.Copy(PathToSvg, SaveTextBox.Text);
+                }
+                catch
+                {
+                    //ignore
+                }
+            }
         }
 
-
+        private void CopyButton_Click(object sender, EventArgs e)
+        {
+            SaveTextBox.Text = PathToSvg;
+            Clipboard.SetFileDropList(new StringCollection { PathToSvg });
+        }
+        
+        private void DocumentComplited_event(object sender, WebBrowserDocumentCompletedEventArgs e)
+        {
+            PageLoaded = true;
+        }
     }
 }
