@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -103,15 +105,22 @@ namespace SvgExtractor
             {
                 return;
             }
+            //TODO improve task
+            var elementList = new List<string>();
+            await Task.Factory.StartNew(async () =>
+            {
+                webBrowser1.Navigate(svgPath);
+                var renderService = new RenderService();
+                elementList = await renderService.Start(svgPath);
+                return elementList;
 
-       
-            webBrowser1.Navigate(svgPath);
-            var renderService = new RenderService();
-            var elementList = await renderService.Start(svgPath);
+            }).ConfigureAwait(true);
+
             SvgTrackBar.Minimum = 0;
             SvgTrackBar.Maximum = elementList.Count - 1;
             SvgTrackBar.Value = elementList.Count - 1;
             SetPathToSvg(SvgTrackBar.Value);
+
             EnableAllButtons();
         }
 
