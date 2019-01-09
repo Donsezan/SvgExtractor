@@ -39,6 +39,7 @@
             this.SaveTextBox = new System.Windows.Forms.TextBox();
             this.SaveButton = new System.Windows.Forms.Button();
             this.CopyButton = new System.Windows.Forms.Button();
+            this.SvgSaveFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.SvgTrackBar)).BeginInit();
             this.SuspendLayout();
@@ -100,7 +101,6 @@
             this.webBrowser1.ScriptErrorsSuppressed = true;
             this.webBrowser1.Size = new System.Drawing.Size(590, 289);
             this.webBrowser1.TabIndex = 8;
-            this.webBrowser1.DocumentCompleted += new System.Windows.Forms.WebBrowserDocumentCompletedEventHandler(this.DocumentComplited_event);
             // 
             // DoItButton
             // 
@@ -121,7 +121,7 @@
             this.SvgTrackBar.Name = "SvgTrackBar";
             this.SvgTrackBar.Size = new System.Drawing.Size(529, 45);
             this.SvgTrackBar.TabIndex = 1;
-            this.SvgTrackBar.Scroll += new System.EventHandler(this.ScrollChainged_event);
+            this.SvgTrackBar.Scroll += new System.EventHandler(this.ScrollChanged_event);
             // 
             // Savelabel
             // 
@@ -167,6 +167,10 @@
             this.CopyButton.UseVisualStyleBackColor = true;
             this.CopyButton.Click += new System.EventHandler(this.CopyButton_Click);
             // 
+            // SvgSaveFileDialog
+            // 
+            this.SvgSaveFileDialog.Title = "SVG save dialog";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -204,6 +208,7 @@
         private System.Windows.Forms.Button DoItButton;
         private System.Windows.Forms.WebBrowser webBrowser1;
         private System.Windows.Forms.Button CopyButton;
+        private System.Windows.Forms.SaveFileDialog SvgSaveFileDialog;
     }
 }
 

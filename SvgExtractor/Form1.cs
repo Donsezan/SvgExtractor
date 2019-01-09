@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -8,107 +9,163 @@ namespace SvgExtractor
 {
     public partial class Form1 : Form
     {
-        private string PathToSvg;
-        private bool PageLoaded;
+        public const string TempFolder = "Temp";
+        public const string FileExtension = "svg";
+        private string _pathToSvg;
 
         public Form1()
         {
             IeFeatureControlFix();
             InitializeComponent();
+            CheckAndPreparingFolder();
+        }
+
+        private void CheckAndPreparingFolder()
+        {
+            if (!Directory.Exists(TempFolder))
+            {
+                Directory.CreateDirectory(TempFolder);
+            }
+            else
+            {
+                if (Directory.GetFiles(TempFolder).Length != 0)
+                {
+                    var folder = new DirectoryInfo(TempFolder);
+                    foreach (var file in folder.GetFiles()) file.Delete();
+                }
+            }
         }
 
         private void IeFeatureControlFix()
         {
-            int BrowserVer, RegVal;
+            int browserVer, regVal;
 
             // get the installed IE version
-            using (WebBrowser Wb = new WebBrowser())
-                BrowserVer = Wb.Version.Major;
+            using (var wb = new WebBrowser())
+            {
+                browserVer = wb.Version.Major;
+            }
 
             // set the appropriate IE version
-            if (BrowserVer >= 11)
-                RegVal = 11001;
-            else if (BrowserVer == 10)
-                RegVal = 10001;
-            else if (BrowserVer == 9)
-                RegVal = 9999;
-            else if (BrowserVer == 8)
-                RegVal = 8888;
+            if (browserVer >= 11)
+                regVal = 11001;
+            else if (browserVer == 10)
+                regVal = 10001;
+            else if (browserVer == 9)
+                regVal = 9999;
+            else if (browserVer == 8)
+                regVal = 8888;
             else
-                RegVal = 7000;
+                regVal = 7000;
 
             // set the actual key
-            using (RegistryKey Key = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION", RegistryKeyPermissionCheck.ReadWriteSubTree))
-                if (Key.GetValue(System.Diagnostics.Process.GetCurrentProcess().ProcessName + ".exe") == null)
-                    Key.SetValue(System.Diagnostics.Process.GetCurrentProcess().ProcessName + ".exe", RegVal, RegistryValueKind.DWord);
+            using (var key = Registry.CurrentUser.CreateSubKey(
+                @"SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION",
+                RegistryKeyPermissionCheck.ReadWriteSubTree))
+            {
+                if (key != null && key.GetValue(Process.GetCurrentProcess().ProcessName + ".exe") == null)
+                    key.SetValue(Process.GetCurrentProcess().ProcessName + ".exe", regVal,
+                        RegistryValueKind.DWord);
+            }
         }
 
         private void OpenButton_Click(object sender, EventArgs e)
         {
-            using (OpenFileDialog dialog = new OpenFileDialog())
+            if (!OpenButton.Enabled) return;
+            using (var dialog = new OpenFileDialog())
             {
-                if (dialog.ShowDialog() == DialogResult.OK)
-                {
-                    PathTextBox.Text = dialog.FileName;
-                }
+                if (dialog.ShowDialog() == DialogResult.OK) PathTextBox.Text = dialog.FileName;
             }
         }
 
         private void PathTextBox_DragEnterEvent(object sender, DragEventArgs e)
         {
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (files != null && files.Length != 0)
-            {
-                PathTextBox.Text = files[0];
-            }
+            if (!OpenButton.Enabled) return;
+            var files = (string[]) e.Data.GetData(DataFormats.FileDrop);
+            if (files != null && files.Length != 0) PathTextBox.Text = files[0];
         }
 
         private async void DoItButton_Click(object sender, EventArgs e)
         {
+            if (!DoItButton.Enabled) return;
+            BlockAllButtons();
+            string svgPath;
+            if (PathTextBox.Text != string.Empty)
+            {
+                svgPath = PathTextBox.Text;
+            }
+            else if (webBrowser1.Url != null)
+            {
+                svgPath = webBrowser1.Url?.AbsolutePath;
+                PathTextBox.Text = svgPath;
+            }
+            else
+            {
+                return;
+            }
 
-            webBrowser1.Navigate(PathTextBox.Text);
+       
+            webBrowser1.Navigate(svgPath);
             var renderService = new RenderService();
-            var elementlist = await renderService.duet(PathTextBox.Text);
-            SvgTrackBar.Minimum = 1;
-            SvgTrackBar.Maximum = elementlist.Count - 1;
-            SvgTrackBar.Value = elementlist.Count - 1;
-            PathToSvg = AppDomain.CurrentDomain.BaseDirectory + $"Temp\\svg-{SvgTrackBar.Value}.svg";
+            var elementList = await renderService.Start(svgPath);
+            SvgTrackBar.Minimum = 0;
+            SvgTrackBar.Maximum = elementList.Count - 1;
+            SvgTrackBar.Value = elementList.Count - 1;
+            SetPathToSvg(SvgTrackBar.Value);
+            EnableAllButtons();
         }
-        
-        private void ScrollChainged_event(object sender, EventArgs e)
+
+        private void ScrollChanged_event(object sender, EventArgs e)
         {
-            PathToSvg = AppDomain.CurrentDomain.BaseDirectory + $"Temp\\svg-{SvgTrackBar.Value}.svg";
-            webBrowser1.Navigate(PathToSvg);
+            if (!SvgTrackBar.Enabled) return;
+            SetPathToSvg(SvgTrackBar.Value);
+            webBrowser1.Navigate(_pathToSvg);
+        }
+
+
+        private void SetPathToSvg(int index)
+        {
+            _pathToSvg = AppDomain.CurrentDomain.BaseDirectory +
+                         $@"{TempFolder}\{FileExtension}-{index}.{FileExtension}";
         }
 
         private void SaveButton_Click(object sender, EventArgs e)
         {
-            if (SaveTextBox.Text == string.Empty)
+            if (!SaveButton.Enabled) return;
+            SvgSaveFileDialog.InitialDirectory = @"C:\";
+            SvgSaveFileDialog.RestoreDirectory = true;
+            SvgSaveFileDialog.DefaultExt = FileExtension;
+            SvgSaveFileDialog.CheckPathExists = true;
+            if (SvgSaveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                SaveTextBox.Text = PathToSvg;
-            }
-            else
-            {
-                try
-                {
-                    File.Copy(PathToSvg, SaveTextBox.Text);
-                }
-                catch
-                {
-                    //ignore
-                }
+                SaveTextBox.Text = SvgSaveFileDialog.FileName;
+                File.Copy(_pathToSvg, SaveTextBox.Text);
             }
         }
 
         private void CopyButton_Click(object sender, EventArgs e)
         {
-            SaveTextBox.Text = PathToSvg;
-            Clipboard.SetFileDropList(new StringCollection { PathToSvg });
+            if (!CopyButton.Enabled) return;
+            Clipboard.SetFileDropList(new StringCollection {_pathToSvg});
+            SaveTextBox.Text = @"Done: Copied to clipboard";
         }
-        
-        private void DocumentComplited_event(object sender, WebBrowserDocumentCompletedEventArgs e)
+
+        private void BlockAllButtons()
         {
-            PageLoaded = true;
+            OpenButton.Enabled = false;
+            DoItButton.Enabled = false;
+            SvgTrackBar.Enabled = false;
+            SaveButton.Enabled = false;
+            CopyButton.Enabled = false;
+        }
+
+        private void EnableAllButtons()
+        {
+            OpenButton.Enabled = true;
+            DoItButton.Enabled = true;
+            SvgTrackBar.Enabled = true;
+            SaveButton.Enabled = true;
+            CopyButton.Enabled = true;
         }
     }
 }
