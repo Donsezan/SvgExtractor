@@ -33,24 +33,26 @@ namespace SvgExtractor
                 Directory.Delete(ResourceTempFolder);
             }
         }
+
         public static void CheckAndPreparingFolder()
         {
-            if (!Directory.Exists(Form1.TempFolder))
+            if (!Directory.Exists(MainForm.TempFolder))
             {
-                Directory.CreateDirectory(Form1.TempFolder);
+                Directory.CreateDirectory(MainForm.TempFolder);
             }
             else
             {
-                if (Directory.GetFiles(Form1.TempFolder).Length != 0)
+                if (Directory.GetFiles(MainForm.TempFolder).Length != 0)
                 {
-                    var folder = new DirectoryInfo(Form1.TempFolder);
+                    var folder = new DirectoryInfo(MainForm.TempFolder);
                     foreach (var file in folder.GetFiles()) file.Delete();
                 }
             }
         }
+
         private static string GetTemporaryDirectory()
         {
-            string tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(tempDirectory);
             return tempDirectory;
         }

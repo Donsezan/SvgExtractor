@@ -53,7 +53,7 @@ namespace SvgExtractor
             foreach (var src in sourceStateList)
             {
                 var svgCode = SeparateSvgInSource(src);
-                File.WriteAllText($@"{Form1.TempFolder}\{Form1.FileExtension}-{index}.{Form1.FileExtension}", svgCode);
+                File.WriteAllText($@"{MainForm.TempFolder}\{MainForm.FileExtension}-{index}.{MainForm.FileExtension}", svgCode);
                 index++;
             }
 

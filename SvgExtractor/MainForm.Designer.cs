@@ -1,6 +1,6 @@
 ﻿namespace SvgExtractor
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.Pathlabel = new System.Windows.Forms.Label();
             this.PathTextBox = new System.Windows.Forms.TextBox();
             this.OpenButton = new System.Windows.Forms.Button();
@@ -172,7 +173,7 @@
             // 
             this.SvgSaveFileDialog.Title = "SVG save dialog";
             // 
-            // Form1
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
@@ -185,8 +186,9 @@
             this.Controls.Add(this.OpenButton);
             this.Controls.Add(this.PathTextBox);
             this.Controls.Add(this.Pathlabel);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(2);
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.Text = "SvgExtractor";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormClosing_Event);
             this.groupBox1.ResumeLayout(false);

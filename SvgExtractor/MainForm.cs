@@ -8,14 +8,17 @@ using Microsoft.Win32;
 
 namespace SvgExtractor
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         public const string TempFolder = "Temp";
         public const string FileExtension = "svg";
         private string _pathToSvg;
 
-        public Form1()
+        public MainForm()
         {
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+
             IeFeatureControlFix();
             InitializeComponent();
             FileHelper.CheckAndPreparingFolder();
@@ -113,7 +116,6 @@ namespace SvgExtractor
             SetPathToSvg(SvgTrackBar.Value);
             previewWebBrowser.Navigate(_pathToSvg);
         }
-
 
         private void SetPathToSvg(int index)
         {
