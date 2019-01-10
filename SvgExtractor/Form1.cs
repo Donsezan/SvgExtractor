@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
@@ -19,23 +18,8 @@ namespace SvgExtractor
         {
             IeFeatureControlFix();
             InitializeComponent();
-            CheckAndPreparingFolder();
-        }
-
-        private void CheckAndPreparingFolder()
-        {
-            if (!Directory.Exists(TempFolder))
-            {
-                Directory.CreateDirectory(TempFolder);
-            }
-            else
-            {
-                if (Directory.GetFiles(TempFolder).Length != 0)
-                {
-                    var folder = new DirectoryInfo(TempFolder);
-                    foreach (var file in folder.GetFiles()) file.Delete();
-                }
-            }
+            FileHelper.CheckAndPreparingFolder();
+            FileHelper.PreparingLoadingHtml();
         }
 
         private void IeFeatureControlFix()
@@ -90,45 +74,44 @@ namespace SvgExtractor
         private async void DoItButton_Click(object sender, EventArgs e)
         {
             if (!DoItButton.Enabled) return;
-            BlockAllButtons();
             string svgPath;
             if (PathTextBox.Text != string.Empty)
             {
                 svgPath = PathTextBox.Text;
             }
-            else if (webBrowser1.Url != null)
+            else if (previewWebBrowser.Url != null)
             {
-                svgPath = webBrowser1.Url?.AbsolutePath;
+                svgPath = previewWebBrowser.Url?.ToString();
                 PathTextBox.Text = svgPath;
             }
             else
             {
                 return;
             }
-            //TODO improve task
-            var elementList = new List<string>();
-            await Task.Factory.StartNew(async () =>
+
+            BlockAllButtons();
+            previewWebBrowser.Navigate(FileHelper.ResourceTempFolder + "\\Loading.html");
+            var elementList = await Task.Factory.StartNew(async () =>
             {
-                webBrowser1.Navigate(svgPath);
-                var renderService = new RenderService();
-                elementList = await renderService.Start(svgPath);
-                return elementList;
+                var svgList = await RenderService.Start(svgPath);
+                return svgList;
 
             }).ConfigureAwait(true);
 
             SvgTrackBar.Minimum = 0;
-            SvgTrackBar.Maximum = elementList.Count - 1;
-            SvgTrackBar.Value = elementList.Count - 1;
+            SvgTrackBar.Maximum = elementList.Result.Count - 1;
+            SvgTrackBar.Value = elementList.Result.Count - 1;
             SetPathToSvg(SvgTrackBar.Value);
 
+            previewWebBrowser.Navigate(_pathToSvg);
             EnableAllButtons();
         }
 
         private void ScrollChanged_event(object sender, EventArgs e)
         {
-            if (!SvgTrackBar.Enabled) return;
+            if (!SvgTrackBar.Enabled | _pathToSvg == null) return;
             SetPathToSvg(SvgTrackBar.Value);
-            webBrowser1.Navigate(_pathToSvg);
+            previewWebBrowser.Navigate(_pathToSvg);
         }
 
 
@@ -140,7 +123,7 @@ namespace SvgExtractor
 
         private void SaveButton_Click(object sender, EventArgs e)
         {
-            if (!SaveButton.Enabled) return;
+            if (!SaveButton.Enabled | _pathToSvg == null) return;
             SvgSaveFileDialog.InitialDirectory = @"C:\";
             SvgSaveFileDialog.RestoreDirectory = true;
             SvgSaveFileDialog.DefaultExt = FileExtension;
@@ -154,7 +137,7 @@ namespace SvgExtractor
 
         private void CopyButton_Click(object sender, EventArgs e)
         {
-            if (!CopyButton.Enabled) return;
+            if (!CopyButton.Enabled | _pathToSvg == null) return;
             Clipboard.SetFileDropList(new StringCollection {_pathToSvg});
             SaveTextBox.Text = @"Done: Copied to clipboard";
         }
@@ -175,6 +158,11 @@ namespace SvgExtractor
             SvgTrackBar.Enabled = true;
             SaveButton.Enabled = true;
             CopyButton.Enabled = true;
+        }
+
+        private void FormClosing_Event(object sender, FormClosingEventArgs e)
+        {
+            FileHelper.DeleteTempFolder();
         }
     }
 }

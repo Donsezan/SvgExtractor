@@ -7,9 +7,9 @@ using OpenQA.Selenium.Chrome;
 
 namespace SvgExtractor
 {
-    public class RenderService
+    public static class RenderService
     {
-        public async Task<List<string>> Start(string link)
+        public static async Task<List<string>> Start(string link)
         {
             var chromeOptions = new ChromeOptions();
             chromeOptions.AddArguments(new List<string>
@@ -30,7 +30,7 @@ namespace SvgExtractor
             return list;
         }
 
-        private async Task<List<string>> WaitForLoad(IWebDriver driver, int timeoutSec = 0)
+        private static async Task<List<string>> WaitForLoad(IWebDriver driver, int timeoutSec = 0)
         {
             var sourceStateList = new List<string> {driver.PageSource};
             var loading = true;

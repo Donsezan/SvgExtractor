@@ -61,6 +61,37 @@ namespace SvgExtractor.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;style&gt;
+        ///.container {
+        ///    position: absolute;
+        ///    top: 50%;
+        ///    left: 50%;
+        ///    -moz-transform: translateX(-50%) translateY(-50%);
+        ///    -webkit-transform: translateX(-50%) translateY(-50%);
+        ///    transform: translateX(-50%) translateY(-50%);
+        ///}
+        ///&lt;/style&gt;
+        ///&lt;div class=&quot;container&quot;&gt;
+        ///  &lt;img src=&quot;loading-frame.gif&quot;  /&gt;
+        ///&lt;/div&gt;.
+        /// </summary>
+        internal static string Loading {
+            get {
+                return ResourceManager.GetString("Loading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap loading_frame {
+            get {
+                object obj = ResourceManager.GetObject("loading_frame", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon SVG_logo {

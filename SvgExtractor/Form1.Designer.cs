@@ -32,7 +32,7 @@
             this.PathTextBox = new System.Windows.Forms.TextBox();
             this.OpenButton = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.webBrowser1 = new System.Windows.Forms.WebBrowser();
+            this.previewWebBrowser = new System.Windows.Forms.WebBrowser();
             this.DoItButton = new System.Windows.Forms.Button();
             this.SvgTrackBar = new System.Windows.Forms.TrackBar();
             this.Savelabel = new System.Windows.Forms.Label();
@@ -80,7 +80,7 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.webBrowser1);
+            this.groupBox1.Controls.Add(this.previewWebBrowser);
             this.groupBox1.Controls.Add(this.DoItButton);
             this.groupBox1.Controls.Add(this.SvgTrackBar);
             this.groupBox1.Location = new System.Drawing.Point(13, 42);
@@ -92,15 +92,16 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "SVG preview";
             // 
-            // webBrowser1
+            // previewWebBrowser
             // 
-            this.webBrowser1.IsWebBrowserContextMenuEnabled = false;
-            this.webBrowser1.Location = new System.Drawing.Point(8, 18);
-            this.webBrowser1.MinimumSize = new System.Drawing.Size(20, 20);
-            this.webBrowser1.Name = "webBrowser1";
-            this.webBrowser1.ScriptErrorsSuppressed = true;
-            this.webBrowser1.Size = new System.Drawing.Size(590, 289);
-            this.webBrowser1.TabIndex = 8;
+            this.previewWebBrowser.IsWebBrowserContextMenuEnabled = false;
+            this.previewWebBrowser.Location = new System.Drawing.Point(8, 18);
+            this.previewWebBrowser.MinimumSize = new System.Drawing.Size(20, 20);
+            this.previewWebBrowser.Name = "previewWebBrowser";
+            this.previewWebBrowser.ScriptErrorsSuppressed = true;
+            this.previewWebBrowser.ScrollBarsEnabled = false;
+            this.previewWebBrowser.Size = new System.Drawing.Size(590, 289);
+            this.previewWebBrowser.TabIndex = 8;
             // 
             // DoItButton
             // 
@@ -187,6 +188,7 @@
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.Text = "SvgExtractor";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormClosing_Event);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.SvgTrackBar)).EndInit();
@@ -206,7 +208,7 @@
         private System.Windows.Forms.TextBox SaveTextBox;
         private System.Windows.Forms.Button SaveButton;
         private System.Windows.Forms.Button DoItButton;
-        private System.Windows.Forms.WebBrowser webBrowser1;
+        private System.Windows.Forms.WebBrowser previewWebBrowser;
         private System.Windows.Forms.Button CopyButton;
         private System.Windows.Forms.SaveFileDialog SvgSaveFileDialog;
     }
